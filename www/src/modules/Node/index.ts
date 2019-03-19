@@ -88,6 +88,9 @@ export default class Node extends LeafNode<Node> {
       : this.se.getCell(x - offset, y - offset);
   }
 
+  public empty = (): boolean => this.population === 0;
+  public isLeaf = (): boolean => this.level === 0;
+
   public get nodes(): INodes<Node> {
     return { nw: this.nw, ne: this.ne, sw: this.sw, se: this.se };
   }
