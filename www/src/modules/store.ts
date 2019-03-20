@@ -2,10 +2,10 @@ export const createStore = <T>() => {
   // @ts-ignore
   const store: T = {};
 
-  const set = (config: T) => {
-    Object.keys(config).forEach(key => {
+  const set = (newStore: T) => {
+    Object.keys(newStore).forEach(key => {
       // @ts-ignore
-      store[key] = config[key];
+      store[key] = newStore[key];
     });
   };
 
