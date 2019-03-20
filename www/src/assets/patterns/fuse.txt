@@ -1,2 +1,1 @@
-D x = 100, y = 100
 27bo$25b2o$26b2o7$11bo$10bobo$11bobo$12bobo$13bobo$14bobo$15bobo18bo$16bobo15b2o$17bobo15b2o$18bobo$19bobo$20bobo8b2o$21bobo7b2o$22bobo$bo21bobo$b2o21bobo$obo22bobo$26bobo$27bobo$28bobo$29bobo$21b2o7bobo$21b2o8bobo$32bobo$17bo15bobo$17b2o15bobo$16bobo16bobo$36bobo$37bobo$38bobo22bo$39bobo21bobo$40bobo20b2o$41bobo$42bobo$43bobo$44bobo$45bobo$46bobo$47bobo$48bobo$49b2o2$51bo$50b2o$50bobo!

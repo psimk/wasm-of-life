@@ -1,24 +1,9 @@
 export const readPattern = (pattern: string, setCell: (x: number, y: number) => void) => {
-  let [ coordinateString, realPattern ] = pattern.split('\n');
-
-  let offsetCoords = { x: 0, y: 0 };
-
-  if (coordinateString.startsWith('D')) {
-    const [ coordinateX, coordinateY ] = coordinateString
-      .substring(2, coordinateString.length)
-      .split(', ');
-
-    offsetCoords = {
-      x: Number(coordinateX.substring(4, coordinateX.length)),
-      y: Number(coordinateY.substring(4, coordinateY.length)),
-    };
-  } else realPattern = pattern;
-
   let x = 0;
   let y = 0;
   let parameterArgument = 0;
 
-  for (const char of realPattern) {
+  for (const char of pattern) {
     let param = parameterArgument === 0 ? 1 : parameterArgument;
 
     if (char === 'b') {
@@ -37,7 +22,7 @@ export const readPattern = (pattern: string, setCell: (x: number, y: number) => 
     if (char === 'o') {
       while (param-- > 0) {
         x += 1;
-        setCell(x + offsetCoords.x, y + offsetCoords.y);
+        setCell(x, y);
       }
       parameterArgument = 0;
       continue;

@@ -1,2 +1,1 @@
-D x = 100, y = 100
 3bo11bo3b$3bo11bo3b$2bobo9bobo2b2$bo3bo7bo3bob$bob6ob6obob$o7bobo7bo$o7bobo7bo$o17bo$bob2ob2o3b2ob2obo!
