@@ -50,17 +50,6 @@ export const parseFilename = (fileName: string, fileEnding: string): string => {
     .join(' ');
 };
 
-export const hashCode = (value: string) => {
-  if (value.length === 0) return 0;
-
-  let hash = 0;
-  for (const char of value) {
-    hash = (hash << 5) - hash + Number(char);
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
-};
-
 export const power = (() => {
   const MAX_SIZE = 1024;
   const POWER_OF = 2;
@@ -78,3 +67,6 @@ export const power = (() => {
     return powers[x];
   };
 })();
+
+export const rgbToInt32 = (r: number, g: number, b: number) =>
+  r > 255 ? 255 : r | (g > 255 ? 255 : g << 8) | (b > 255 ? 255 : b << 16) | (0xff << 24);

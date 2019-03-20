@@ -1,6 +1,6 @@
 import dom, { IDS } from './dom';
 import Universe from './modules/Universe';
-import { readPattern, parseFilename } from './util';
+import { readPattern, parseFilename, rgbToInt32 } from './util';
 import Drawer from './modules/Drawer';
 import globals from './modules/globals';
 
@@ -8,7 +8,7 @@ const LIFE = [ 'JavaScript', 'WASM' ];
 
 const drawer = new Drawer(
   { height: document.body.clientHeight, width: document.body.clientWidth },
-  { alive: '#FFFFFF', dead: '#000000' },
+  { alive: rgbToInt32(255, 0, 0), dead: rgbToInt32(0, 0, 0) },
   1,
 );
 

@@ -6,8 +6,8 @@ import Drawer, { IDimensions } from './Drawer';
 import Coordinate from './Coordinate';
 
 export interface IColors {
-  alive: string;
-  dead: string;
+  alive: number;
+  dead: number;
 }
 
 export default class LifeDrawer extends Drawer {
@@ -30,10 +30,6 @@ export default class LifeDrawer extends Drawer {
     this.offset = new Coordinate();
 
     this.grid = this.createImageDataBuffer(Int32Array) as Int32Array;
-
-    for (let i = 0; i < this.area; i++) {
-      this.grid[i] = 0xff << 24;
-    }
 
     mouseEvents.set({
       onScroll: this.zoom.bind(this),
@@ -58,12 +54,10 @@ export default class LifeDrawer extends Drawer {
   }
 
   public draw(rootNode: Node) {
-    const blackInt = 0 | (0 << 8) | (0 << 16) | (0xff << 24);
-
     this.borderWidth = (this.borderWidth * this.cellSize) | 0;
 
     for (let i = 0; i < this.area; i++) {
-      this.grid[i] = blackInt;
+      this.grid[i] = this.colors.dead;
     }
 
     const drawSize = power(rootNode.level - 1) * this.cellSize;
@@ -124,11 +118,9 @@ export default class LifeDrawer extends Drawer {
     let pointer = x + y * this.dimensions.width;
     const row_width = this.dimensions.width - cellWidth;
 
-    const color = 0xffffffff;
-
     for (let i = 0; i < cellHeight; i++) {
       for (var j = 0; j < cellWidth; j++) {
-        this.grid[pointer] = color;
+        this.grid[pointer] = this.colors.alive;
 
         pointer++;
       }
