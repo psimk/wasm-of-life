@@ -5,9 +5,9 @@ import Drawer from './modules/Drawer';
 import globals from './modules/globals';
 
 globals.config.set({
-  dimensions: { height: 256, width: 256 },
+  dimensions: { height: document.body.clientHeight, width: document.body.clientWidth },
   colors: { alive: '#FFFFFF', dead: '#000000' },
-  cellSize: 2,
+  cellSize: 1,
 });
 
 const LIFE = [ 'JavaScript', 'WASM' ];
@@ -44,8 +44,6 @@ LIFE.map((life, index) => ({ label: life, value: String(index) })).forEach(dom.a
 
     readPattern(pattern, (x, y) => universe.setCell(x, y));
 
-    drawer.cellGetter = (x: number, y: number) => universe.getCell(x, y);
-
     let rafFinishTime = 0;
     const tick = () => {
       globals.stats.set({
@@ -55,7 +53,7 @@ LIFE.map((life, index) => ({ label: life, value: String(index) })).forEach(dom.a
 
       dom.setStats();
 
-      drawer.drawCells();
+      drawer.draw(universe.rootNode);
       rafFinishTime = performance.now();
 
       universe.step();
