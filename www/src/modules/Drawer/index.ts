@@ -2,17 +2,29 @@ import globals from '../globals';
 import Node from '../Node';
 import { power } from '../../util';
 import mouseEvents from './mouseEvents';
-import Drawer from './Drawer';
+import Drawer, { IDimensions } from './Drawer';
 import Coordinate from './Coordinate';
+
+export interface IColors {
+  alive: string;
+  dead: string;
+}
 
 export default class LifeDrawer extends Drawer {
   private readonly offset: Coordinate;
   private readonly grid: Int32Array;
 
   private borderWidth: number;
+  private cellSize: number;
 
-  constructor() {
-    super();
+  public colors: IColors;
+
+  constructor(dimensions: IDimensions, colors: IColors, startingCellSize: number) {
+    super(dimensions);
+
+    this.colors = colors;
+    this.cellSize = startingCellSize;
+
     this.borderWidth = 0;
 
     this.offset = new Coordinate();
@@ -36,8 +48,7 @@ export default class LifeDrawer extends Drawer {
   }
 
   public zoom(isDown: boolean, x: number, y: number) {
-    const { cellSize } = globals.config.get();
-    globals.config.set({ cellSize: isDown ? (cellSize || 1) / 2 : (cellSize || 1) * 2 });
+    this.cellSize = isDown ? this.cellSize / 2 : this.cellSize * 2;
 
     const offsetX = this.offset.x - x;
     const offsetY = this.offset.y - y;
@@ -49,16 +60,13 @@ export default class LifeDrawer extends Drawer {
   public draw(rootNode: Node) {
     const blackInt = 0 | (0 << 8) | (0 << 16) | (0xff << 24);
 
-    const { cellSize } = globals.config.get();
-    if (!cellSize) throw 'You need to set the global cellSize';
-
-    this.borderWidth = (this.borderWidth * cellSize) | 0;
+    this.borderWidth = (this.borderWidth * this.cellSize) | 0;
 
     for (let i = 0; i < this.area; i++) {
       this.grid[i] = blackInt;
     }
 
-    const drawSize = power(rootNode.level - 1) * cellSize;
+    const drawSize = power(rootNode.level - 1) * this.cellSize;
 
     this.drawNode(rootNode, 2 * drawSize, drawSize * -1, drawSize * -1);
 
@@ -76,16 +84,12 @@ export default class LifeDrawer extends Drawer {
     )
       return;
 
-    const { cellSize } = globals.config.get();
-    if (!cellSize) throw 'You need to set the global cellSize';
-
-    if (size <= 1) {
-      this.drawCell(offsetX + this.offset.x, offsetY + this.offset.y, 1);
-      return;
-    }
-
-    if (node.isLeaf()) {
-      this.drawCell(offsetX + this.offset.x, offsetY + this.offset.y, cellSize);
+    if (size <= 1 || node.isLeaf()) {
+      this.drawCell(
+        offsetX + this.offset.x,
+        offsetY + this.offset.y,
+        size <= 1 ? 1 : this.cellSize,
+      );
       return;
     }
 

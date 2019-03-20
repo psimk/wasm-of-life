@@ -4,15 +4,13 @@ import { readPattern, parseFilename } from './util';
 import Drawer from './modules/Drawer';
 import globals from './modules/globals';
 
-globals.config.set({
-  dimensions: { height: document.body.clientHeight, width: document.body.clientWidth },
-  colors: { alive: '#FFFFFF', dead: '#000000' },
-  cellSize: 1,
-});
-
 const LIFE = [ 'JavaScript', 'WASM' ];
 
-const drawer = new Drawer();
+const drawer = new Drawer(
+  { height: document.body.clientHeight, width: document.body.clientWidth },
+  { alive: '#FFFFFF', dead: '#000000' },
+  1,
+);
 
 // @ts-ignore
 const patternContexts = require.context('./assets/patterns', false, /\.(txt)$/);
@@ -54,6 +52,7 @@ LIFE.map((life, index) => ({ label: life, value: String(index) })).forEach(dom.a
       dom.setStats();
 
       drawer.draw(universe.rootNode);
+
       rafFinishTime = performance.now();
 
       universe.step();
