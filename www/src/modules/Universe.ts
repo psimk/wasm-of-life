@@ -69,28 +69,28 @@ export default class Universe {
     this.root = this.root.setCell(x, y);
   }
 
-  public get level(): number {
+  private get level(): number {
     return this.root.level;
   }
 
-  public getCell(x: number, y: number): boolean {
-    return this.root.getCell(x, y);
-  }
-
-  public get nw(): Node {
+  private get nw(): Node {
     return this.root.nw;
   }
 
-  public get ne(): Node {
+  private get ne(): Node {
     return this.root.ne;
   }
 
-  public get sw(): Node {
+  private get sw(): Node {
     return this.root.sw;
   }
 
-  public get se(): Node {
+  private get se(): Node {
     return this.root.se;
+  }
+
+  public get rootNode(): Node {
+    return this.root;
   }
 }
 
