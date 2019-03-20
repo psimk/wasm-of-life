@@ -1,5 +1,5 @@
 import dom, { IDS } from './dom';
-import Universe, { cache } from './modules/Universe';
+import Universe from './modules/Universe';
 import { readPattern, parseFilename } from './util';
 import Drawer from './modules/Drawer';
 import globals from './modules/globals';
