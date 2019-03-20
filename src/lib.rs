@@ -1,4 +1,5 @@
 extern crate cfg_if;
+extern crate js_sys;
 extern crate wasm_bindgen;
 
 mod utils;
@@ -16,6 +17,48 @@ cfg_if! {
         #[global_allocator]
         static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
     }
+}
+
+#[wasm_bindgen]
+pub fn read_pattern(pattern: &str, func: &js_sys::Function) {
+  let mut x = 0;
+  let mut y = 0;
+  let mut parameter_argument = 0;
+
+  for c in pattern.chars() {
+    let mut param = match parameter_argument {
+      0 => 1,
+      _ => parameter_argument,
+    };
+
+    match c {
+      'b' => {
+        x += param;
+        parameter_argument = 0
+      }
+      '$' => {
+        y += param;
+        x = 0;
+        parameter_argument = 0
+      }
+      'o' => {
+        while param > 0 {
+          param -= 1;
+          x += 1;
+          let _ = func.call2(&JsValue::NULL, &JsValue::from(x), &JsValue::from(y));
+        }
+        parameter_argument = 0
+      }
+      '!' => return,
+      _ => {
+        let num = c.to_digit(10).unwrap();
+
+        if num <= 9 {
+          parameter_argument = 10 * parameter_argument + num
+        };
+      }
+    }
+  }
 }
 
 #[wasm_bindgen]
