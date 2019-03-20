@@ -17,7 +17,7 @@ module.exports = {
     }),
     new WasmPackPlugin({
       crateDirectory: '../',
-      forceMode: 'production',
+      // forceMode: 'production',
       withTypeScript: true,
     }),
   ],
