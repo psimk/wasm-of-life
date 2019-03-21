@@ -1,14 +1,13 @@
 import dom, { IDS } from './dom';
 import Universe from './modules/Universe';
+import { cache } from './modules/Node';
 import { readPattern, parseFilename, rgbToInt32 } from './util';
 import Drawer from './modules/Drawer';
 import globals from './modules/globals';
 
-const LIFE = [ 'JavaScript', 'WASM' ];
-
 const drawer = new Drawer(
   { height: document.body.clientHeight, width: document.body.clientWidth },
-  { alive: rgbToInt32(255, 0, 0), dead: rgbToInt32(0, 0, 0) },
+  { alive: rgbToInt32(252, 207, 14), dead: rgbToInt32(40, 42, 43) },
   1,
 );
 
@@ -22,7 +21,14 @@ const patterns = patternContexts.keys().map((patternFile: string) => ({
 
 patterns.forEach(dom.addToPatternSelector);
 
-LIFE.map((life, index) => ({ label: life, value: String(index) })).forEach(dom.addToLifeSelector);
+dom.listenToInput(IDS.STEP_INPUT, ({ target }) => {
+  if (!target) return;
+  globals.stats.set({
+    // @ts-ignore
+    step: Number(target.value),
+  });
+  console.log(globals.stats.get());
+});
 
 (() => {
   dom.setupButton(IDS.RESET_BUTTON, () => {
@@ -32,30 +38,24 @@ LIFE.map((life, index) => ({ label: life, value: String(index) })).forEach(dom.a
 
   dom.setupButton(IDS.TOGGLE_BUTTON, () => {
     dom.frame.stop();
-    const pattern = dom.getSelectorValue(IDS.PATTERN_SELECTOR);
-    const lifeMode = dom.getSelectorValue(IDS.LIFE_SELECTOR);
 
+    const pattern = dom.getSelectorValue(IDS.PATTERN_SELECTOR);
     if (!pattern) throw `Select a pattern first`;
-    if (!lifeMode) throw `Select a life mode first`;
 
     const universe = new Universe();
 
     readPattern(pattern, (x, y) => universe.setCell(x, y));
 
-    let rafFinishTime = 0;
     const tick = () => {
+      universe.step();
+      drawer.draw(universe.rootNode);
+
       globals.stats.set({
-        fps: Math.round(1000 / (performance.now() - rafFinishTime)),
-        generation: (globals.stats.get().generation || 0) + 1,
+        generation: universe.generation,
+        collisions: cache.data().collisionCount,
       });
 
       dom.setStats();
-
-      drawer.draw(universe.rootNode);
-
-      rafFinishTime = performance.now();
-
-      universe.step();
 
       dom.frame.tick();
     };

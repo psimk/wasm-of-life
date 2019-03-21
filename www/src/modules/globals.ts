@@ -2,7 +2,8 @@ import { createStore } from './store';
 
 interface IStats {
   generation?: number;
-  fps?: number;
+  collisions?: number;
+  step?: number;
 }
 
 export default (() => {
