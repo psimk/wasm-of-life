@@ -48,6 +48,8 @@ export default (() => {
   window.addEventListener('mousemove', onMove);
   // @ts-ignore
   window.addEventListener('mousewheel', onScroll);
+  // @ts-ignore
+  window.addEventListener('DOMMouseScroll', onScroll);
 
   const dispose = () => {
     window.removeEventListener('mousedown', onDown);
@@ -55,6 +57,8 @@ export default (() => {
     window.removeEventListener('mousemove', onMove);
     // @ts-ignore
     window.removeEventListener('mousewheel', onScroll);
+    // @ts-ignore
+    window.removeEventListener('DOMMouseScroll', onScroll);
   };
 
   const set = (config: IListeners) => {
