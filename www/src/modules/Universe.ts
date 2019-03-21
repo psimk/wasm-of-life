@@ -1,10 +1,13 @@
 import Node from './Node';
+import { power } from '../util';
 
 export default class Universe {
   private root: Node;
+  public generation: number;
 
   public constructor() {
     this.root = Node.createRoot();
+    this.generation = 0;
   }
 
   public step(): void {
@@ -17,6 +20,7 @@ export default class Universe {
     ) {
       this.grow();
     }
+    this.generation += power(this.root.level - 2);
     this.calculateNextGeneration();
   }
 
@@ -27,32 +31,12 @@ export default class Universe {
   public grow(): void {
     const border = Node.createEmpty(this.level - 1);
 
-    this.root = Node.create({
-      nw: Node.create({
-        nw: border,
-        ne: border,
-        sw: border,
-        se: this.root.nw,
-      }),
-      ne: Node.create({
-        nw: border,
-        ne: border,
-        sw: this.root.ne,
-        se: border,
-      }),
-      sw: Node.create({
-        nw: border,
-        ne: this.root.sw,
-        sw: border,
-        se: border,
-      }),
-      se: Node.create({
-        nw: this.root.se,
-        ne: border,
-        sw: border,
-        se: border,
-      }),
-    });
+    this.root = Node.create(
+      Node.create(border, border, border, this.root.nw),
+      Node.create(border, border, this.root.ne, border),
+      Node.create(border, this.root.sw, border, border),
+      Node.create(this.root.se, border, border, border),
+    );
   }
 
   public setCell(x: number, y: number): void {

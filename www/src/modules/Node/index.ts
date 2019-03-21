@@ -2,6 +2,7 @@ import LeafNode from './LeafNode';
 import { INodes, INodesUndefined, UNDEFINED_NODES, hash } from './misc';
 import { power } from '../../util';
 import { cache } from '../Universe';
+import { universe_new } from '../../../../pkg/wasm_of_life_bg';
 
 export default class Node extends LeafNode<Node> {
   public result: Node | undefined;
@@ -11,27 +12,20 @@ export default class Node extends LeafNode<Node> {
 
   public static createRoot = () => Node.createEmpty(3);
 
-  public static create(nodes: INodes<Node>): Node {
-    const hashCode = hash(nodes.nw.id, nodes.ne.id, nodes.sw.id, nodes.se.id);
+  public static create(nw: Node, ne: Node, sw: Node, se: Node): Node {
+    const hashCode = hash(nw.id, ne.id, sw.id, se.id);
 
     let cached = cache.get(hashCode);
 
-    if (!cached) {
-      cached = new Node(cache.nextId(), nodes);
+    const addToCache = () => {
+      cached = new Node(cache.nextId(), { nw, ne, sw, se });
       cache.put(hashCode, cached);
-    }
+    };
 
-    if (
-      cached.nw === nodes.nw &&
-      cached.ne === nodes.ne &&
-      cached.sw === nodes.sw &&
-      cached.se === nodes.se
-    ) {
-      return cached;
-    }
+    if (!cached) addToCache();
+    if (cached.nw === nw && cached.ne === ne && cached.sw === sw && cached.se === se) return cached;
 
-    cached = new Node(cache.nextId(), nodes);
-    cache.put(hashCode, cached);
+    addToCache();
 
     cache.incrementCollisions();
 
@@ -43,12 +37,7 @@ export default class Node extends LeafNode<Node> {
 
     const node = Node.createEmpty(level - 1);
 
-    return Node.create({
-      nw: node,
-      ne: node,
-      sw: node,
-      se: node,
-    });
+    return Node.create(node, node, node, node);
   }
 
   private constructor(id: number, nodes: INodes<Node> | INodesUndefined, isAlive?: boolean) {
@@ -62,13 +51,13 @@ export default class Node extends LeafNode<Node> {
 
     if (x < 0) {
       return y < 0
-        ? Node.create({ ...this.nodes, nw: this.nw.setCell(x + offset, y + offset) })
-        : Node.create({ ...this.nodes, sw: this.sw.setCell(x + offset, y - offset) });
+        ? Node.create(this.nw.setCell(x + offset, y + offset), this.ne, this.sw, this.se)
+        : Node.create(this.nw, this.ne, this.sw.setCell(x + offset, y - offset), this.se);
     }
 
     return y < 0
-      ? Node.create({ ...this.nodes, ne: this.ne.setCell(x - offset, y + offset) })
-      : Node.create({ ...this.nodes, se: this.se.setCell(x - offset, y - offset) });
+      ? Node.create(this.nw, this.ne.setCell(x - offset, y + offset), this.sw, this.se)
+      : Node.create(this.nw, this.ne, this.sw, this.se.setCell(x - offset, y - offset));
   }
 
   public getCell(x: number, y: number): boolean {
@@ -96,115 +85,139 @@ export default class Node extends LeafNode<Node> {
   }
 
   public calculateNextGeneration() {
-    if (!this.result) this.result = this.nextGeneration();
+    if (!this.result) this.result = this.nextQuickGeneration();
+    if (this.population === 0) this.result = this.nw;
+    return this.result;
+  }
+
+  public nextQuickGeneration(): Node {
+    if (this.result) return this.result;
+    if (this.population === 0) {
+      this.result = this.nw;
+      return this.result;
+    }
+    if (this.level === 2) {
+      this.result = slowNextGeneration(this);
+      return this.result;
+    }
+
+    const nw = this.nw.nextQuickGeneration();
+
+    const nwNEVerticalLine = Node.create(
+      this.nw.ne,
+      this.ne.nw,
+      this.nw.se,
+      this.ne.sw,
+    ).nextQuickGeneration();
+
+    const ne = this.ne.nextQuickGeneration();
+
+    const nwSWHorizontalLine = Node.create(
+      this.nw.sw,
+      this.nw.se,
+      this.sw.nw,
+      this.sw.ne,
+    ).nextQuickGeneration();
+
+    const centerNode = Node.create(
+      this.nw.se,
+      this.ne.sw,
+      this.sw.ne,
+      this.se.nw,
+    ).nextQuickGeneration();
+
+    const neSEHorizontalLine = Node.create(
+      this.ne.sw,
+      this.ne.se,
+      this.se.nw,
+      this.se.ne,
+    ).nextQuickGeneration();
+
+    const sw = this.sw.nextQuickGeneration();
+
+    const swSEVerticalLine = Node.create(
+      this.sw.ne,
+      this.se.nw,
+      this.sw.se,
+      this.se.sw,
+    ).nextQuickGeneration();
+
+    const se = this.se.nextQuickGeneration();
+
+    this.result = Node.create(
+      Node.create(nw, nwNEVerticalLine, nwSWHorizontalLine, centerNode).nextQuickGeneration(),
+      Node.create(nwNEVerticalLine, ne, centerNode, neSEHorizontalLine).nextQuickGeneration(),
+      Node.create(nwSWHorizontalLine, centerNode, sw, swSEVerticalLine).nextQuickGeneration(),
+      Node.create(centerNode, neSEHorizontalLine, swSEVerticalLine, se).nextQuickGeneration(),
+    );
+
     return this.result;
   }
 
   public nextGeneration(): Node {
-    if (this.population === 0) return this.nw;
+    if (this.result) return this.result;
+    if (this.population === 0) {
+      this.result = this.nw;
+      return this.result;
+    }
     if (this.level === 2) return slowNextGeneration(this);
     // 8x8
-    const nwCenterNode = Node.create({
-      nw: this.nw.nw.se,
-      ne: this.nw.ne.sw,
-      sw: this.nw.sw.ne,
-      se: this.nw.se.nw,
-    });
+    const nwCenterNode = Node.create(this.nw.nw.se, this.nw.ne.sw, this.nw.sw.ne, this.nw.se.nw);
 
     // 8x8
-    const nwNECenterNode = Node.create({
-      nw: this.nw.ne.se,
-      ne: this.ne.nw.sw,
-      sw: this.nw.se.ne,
-      se: this.ne.sw.nw,
-    });
+    const nwNECenterNode = Node.create(this.nw.ne.se, this.ne.nw.sw, this.nw.se.ne, this.ne.sw.nw);
 
     // 8x8
-    const neCenterNode = Node.create({
-      nw: this.ne.nw.se,
-      ne: this.ne.ne.sw,
-      sw: this.ne.sw.ne,
-      se: this.ne.se.nw,
-    });
+    const neCenterNode = Node.create(this.ne.nw.se, this.ne.ne.sw, this.ne.sw.ne, this.ne.se.nw);
 
     // 8x8
-    const nwSWCenterNode = Node.create({
-      nw: this.nw.sw.se,
-      ne: this.nw.se.sw,
-      sw: this.sw.nw.ne,
-      se: this.sw.ne.nw,
-    });
+    const nwSWCenterNode = Node.create(this.nw.sw.se, this.nw.se.sw, this.sw.nw.ne, this.sw.ne.nw);
 
     // 8x8
-    const centerNode = Node.create({
-      nw: this.nw.se.se,
-      ne: this.ne.sw.sw,
-      sw: this.sw.ne.ne,
-      se: this.se.nw.nw,
-    });
+    const centerNode = Node.create(this.nw.se.se, this.ne.sw.sw, this.sw.ne.ne, this.se.nw.nw);
 
     // 8x8
-    const neSECenterNode = Node.create({
-      nw: this.ne.sw.se,
-      ne: this.ne.se.sw,
-      sw: this.se.nw.ne,
-      se: this.se.ne.nw,
-    });
+    const neSECenterNode = Node.create(this.ne.sw.se, this.ne.se.sw, this.se.nw.ne, this.se.ne.nw);
 
     // 8x8
-    const swCenterNode = Node.create({
-      nw: this.sw.nw.se,
-      ne: this.sw.ne.sw,
-      sw: this.sw.sw.ne,
-      se: this.sw.se.nw,
-    });
+    const swCenterNode = Node.create(this.sw.nw.se, this.sw.ne.sw, this.sw.sw.ne, this.sw.se.nw);
 
     // 8x8
-    const swSECenterNode = Node.create({
-      nw: this.sw.ne.se,
-      ne: this.se.nw.sw,
-      sw: this.sw.se.ne,
-      se: this.se.sw.nw,
-    });
+    const swSECenterNode = Node.create(this.sw.ne.se, this.se.nw.sw, this.sw.se.ne, this.se.sw.nw);
 
     // 8x8
-    const seCenterNode = Node.create({
-      nw: this.se.nw.se,
-      ne: this.se.ne.sw,
-      sw: this.se.sw.ne,
-      se: this.se.se.nw,
-    });
+    const seCenterNode = Node.create(this.se.nw.se, this.se.ne.sw, this.se.sw.ne, this.se.se.nw);
 
-    return Node.create({
+    return Node.create(
       // NW QuadTree 16x16
-      nw: Node.create({
-        nw: nwCenterNode,
-        ne: nwNECenterNode,
-        sw: nwSWCenterNode,
-        se: centerNode,
-      }).calculateNextGeneration(),
+      Node.create(
+        nwCenterNode,
+        nwNECenterNode,
+        nwSWCenterNode,
+        centerNode,
+      ).calculateNextGeneration(),
       // NE QuadTree 16x16
-      ne: Node.create({
-        nw: nwNECenterNode,
-        ne: neCenterNode,
-        sw: centerNode,
-        se: neSECenterNode,
-      }).calculateNextGeneration(),
+      Node.create(
+        nwNECenterNode,
+        neCenterNode,
+        centerNode,
+        neSECenterNode,
+      ).calculateNextGeneration(),
       // SW QuadTree 16x16
-      sw: Node.create({
-        nw: nwSWCenterNode,
-        ne: centerNode,
-        sw: swCenterNode,
-        se: swSECenterNode,
-      }).calculateNextGeneration(),
+      Node.create(
+        nwSWCenterNode,
+        centerNode,
+        swCenterNode,
+        swSECenterNode,
+      ).calculateNextGeneration(),
       // SE QuadTree 16x16
-      se: Node.create({
-        nw: centerNode,
-        ne: neSECenterNode,
-        sw: swSECenterNode,
-        se: seCenterNode,
-      }).calculateNextGeneration(),
-    });
+      Node.create(
+        centerNode,
+        neSECenterNode,
+        swSECenterNode,
+        seCenterNode,
+      ).calculateNextGeneration(),
+    );
   }
 }
 
@@ -230,10 +243,10 @@ const slowNextGeneration = (node: Node): Node => {
       allBits = (allBits << 1) + (node.getCell(x, y) ? 1 : 0);
     }
   }
-  return Node.create({
-    nw: singleGeneration(allBits >> 5),
-    ne: singleGeneration(allBits >> 4),
-    sw: singleGeneration(allBits >> 1),
-    se: singleGeneration(allBits),
-  });
+  return Node.create(
+    singleGeneration(allBits >> 5),
+    singleGeneration(allBits >> 4),
+    singleGeneration(allBits >> 1),
+    singleGeneration(allBits),
+  );
 };
