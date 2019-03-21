@@ -2,6 +2,7 @@ import globals from './modules/globals';
 
 export const enum IDS {
   TOGGLE_BUTTON = 'toggle',
+  STEP_INPUT = 'step',
   RESET_BUTTON = 'resetButton',
   PATTERN_SELECTOR = 'pattern-selector',
   LIFE_SELECTOR = 'life-selector',
@@ -11,12 +12,8 @@ export const enum IDS {
 const setSpan = (id: IDS, value: any) =>
   ((document.getElementById(id) as HTMLSpanElement).innerText = String(value));
 
-const setupButton = (id: IDS, setupMethod: () => void) => {
-  const button = document.getElementById(id);
-  if (!button) throw `Button with id ${id} is not defined in the dom`;
-
-  button.addEventListener('click', setupMethod);
-};
+const setupButton = (id: IDS, setupMethod: () => void) =>
+  (document.getElementById(id) as HTMLButtonElement).addEventListener('click', setupMethod);
 
 const addToSelector = (id: IDS, { label, value }: { label: string; value: string }) => {
   const selector = document.getElementById(id);
@@ -39,6 +36,11 @@ const getSelectorValue = (id: IDS): string =>
   (document.getElementById(id) as HTMLSelectElement).value;
 
 const setStats = () => setSpan(IDS.STATS, JSON.stringify(globals.stats.get(), null, 2));
+
+const listenToInput = (id: IDS, listener: (event: Event) => void) => {
+  const input = document.getElementById(id) as HTMLInputElement;
+  input.addEventListener('change', listener);
+};
 
 const frame = (() => {
   let id: number | undefined;
@@ -71,5 +73,6 @@ export default {
   addToPatternSelector,
   getSelectorValue,
   setStats,
+  listenToInput,
   frame,
 };
