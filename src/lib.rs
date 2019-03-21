@@ -49,6 +49,7 @@ pub fn read_pattern(pattern: &str, func: &js_sys::Function) {
         }
         parameter_argument = 0
       }
+      '\n' => {}
       '!' => return,
       _ => {
         let num = c.to_digit(10).unwrap();
