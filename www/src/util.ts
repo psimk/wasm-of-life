@@ -3,23 +3,33 @@ export const readPattern = (pattern: string, setCell: (x: number, y: number) => 
   let y = 0;
   let parameterArgument = 0;
 
-  for (const char of pattern) {
+  let integerPattern = [];
+
+  for (let i = 0; i < pattern.length; i += 1) {
+    integerPattern.push(pattern.charCodeAt(i));
+  }
+
+  for (const char of integerPattern) {
     let param = parameterArgument === 0 ? 1 : parameterArgument;
 
-    if (char === 'b') {
+    if (char === NaN) throw `Illegal character ${char}`;
+
+    if (char === 10) continue;
+
+    if (char === 98) {
       x += param;
       parameterArgument = 0;
       continue;
     }
 
-    if (char === '$') {
+    if (char === 36) {
       y += param;
       x = 0;
       parameterArgument = 0;
       continue;
     }
 
-    if (char === 'o') {
+    if (char === 111) {
       while (param-- > 0) {
         x += 1;
         setCell(x, y);
@@ -28,16 +38,14 @@ export const readPattern = (pattern: string, setCell: (x: number, y: number) => 
       continue;
     }
 
-    const num = Number(char);
+    if (char === 33) break;
+
+    const num = Number(String.fromCharCode(char));
 
     if (0 <= num && num <= 9) {
       parameterArgument = 10 * parameterArgument + num;
       continue;
     }
-
-    if (char === '!') break;
-
-    throw `Illegal character ${char}`;
   }
 };
 
